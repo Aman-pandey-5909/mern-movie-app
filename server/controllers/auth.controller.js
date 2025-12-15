@@ -22,15 +22,21 @@ const login = asyncHandler(async (req, res) => {
       .status(400)
       .json({ message: "User does not exist", resdata: null });
   }
+  const isMatch = await bcrypt.compare(req.body.password, userExists.password);
+  if (!isMatch) {
+    return res
+      .status(400)
+      .json({ message: "Invalid credentials", resdata: null });
+  }
   const token = jwt.sign({ id: userExists._id, role: userExists.role }, process.env.JWT_SECRET, {
     expiresIn: "1d",
   });
-  res.cookie("session", token, { httpOnly: true });
+  res.cookie("session", token, { httpOnly: true, sameSite: "none", secure: true });
   return res
     .status(200)
     .json({
       message: "Login successful",
-      resdata: { name: userExists.name, email: userExists.email },
+      resdata: { name: userExists.name, email: userExists.email, role: userExists.role },
     });
 });
 
@@ -41,13 +47,34 @@ const adminLogin = asyncHandler(async (req, res) => {
       .status(400)
       .json({ message: "User does not exist", resdata: null });
   }
+  const isMatch = await bcrypt.compare(req.body.password, userExists.password);
+  if (!isMatch) {
+    return res
+      .status(400)
+      .json({ message: "Invalid credentials", resdata: null });
+  }
   const token = jwt.sign({ id: userExists._id, role: userExists.role }, process.env.JWT_SECRET, {
     expiresIn: "1d",
   });
-  res.cookie("session", token, { httpOnly: true });
+  res.cookie("session", token, { httpOnly: true, sameSite: "none", secure: true });
   return res
     .status(200)
-    .json({ message: "Admin Login successful", resdata: null });
+    .json({ message: "Admin Login successful", resdata: { name: userExists.name, email: userExists.email, role: userExists.role } });
 });
 
-module.exports = { signup, login, adminLogin };
+const getuser = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  const userExists = await User.findById(id);
+  return res
+    .status(200)
+    .json({ message: "Get User successful", resdata: { name: userExists.name, email: userExists.email, role: userExists.role } });
+});
+
+const logout = asyncHandler(async (req, res) => {
+  res.clearCookie("session");
+  return res
+    .status(200)
+    .json({ message: "Logout successful", resdata: null });
+});
+
+module.exports = { signup, login, adminLogin, getuser, logout };

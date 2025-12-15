@@ -7,7 +7,8 @@ const {
   deleteMovie,
   getMovieSorted,
   getMovie,
-  getSearchMovies
+  getSearchMovies,
+  getMoviesAll
 } = require("../controllers/movies.controller");
 
 const { verifyToken } = require("../middlewares/verifytoken");
@@ -24,5 +25,6 @@ router.get("/search", verifyToken, getSearchMovies);
 router.post("/movies", verifyToken, verifyRole, validatezod(movieSchema), createMovie);
 router.put("/movies/:id", verifyToken, verifyRole, updateMovie);
 router.delete("/movies/:id", verifyToken, verifyRole, deleteMovie);
+router.get("/moviesall", verifyToken, verifyRole, getMoviesAll);
 
 module.exports = router;
